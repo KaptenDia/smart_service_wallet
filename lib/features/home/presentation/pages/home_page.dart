@@ -722,6 +722,19 @@ class _ActiveBookingHomeCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ),
+              if (booking.status == BookingStatus.completed) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => context.read<ServicesBloc>().add(
+                    DismissBooking(booking.id),
+                  ),
+                  icon: const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF10B981),
+                  ),
+                  tooltip: 'Finish',
+                ),
+              ],
             ],
           ),
         ],
