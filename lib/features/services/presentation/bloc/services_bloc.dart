@@ -61,6 +61,14 @@ class UpdateBookingStatus extends ServicesEvent {
   List<Object?> get props => [bookingId, status];
 }
 
+class DismissBooking extends ServicesEvent {
+  final String bookingId;
+  const DismissBooking(this.bookingId);
+
+  @override
+  List<Object?> get props => [bookingId];
+}
+
 // States
 abstract class ServicesState extends Equatable {
   const ServicesState();
@@ -108,6 +116,7 @@ class ServicesBloc extends Bloc<ServicesEvent, ServicesState> {
     on<BookService>(_onBookService);
     on<ConfirmBooking>(_onConfirmBooking);
     on<UpdateBookingStatus>(_onUpdateBookingStatus);
+    on<DismissBooking>(_onDismissBooking);
   }
 
   void _onLoadServices(LoadServices event, Emitter<ServicesState> emit) async {
@@ -145,17 +154,26 @@ class ServicesBloc extends Bloc<ServicesEvent, ServicesState> {
         final priceChange = (DateTime.now().second % 10 - 5) / 100.0;
         final newPrice = service.price * (1 + priceChange);
 
-        // Randomly update availability info
+        // Randomly update availability info and status
         String? newAvailability = service.availabilityInfo;
-        if (DateTime.now().minute % 3 == 0) {
-          newAvailability = "Updated moments ago";
-        } else if (DateTime.now().minute % 2 == 0) {
+        ServiceStatus newStatus = service.status;
+
+        final minute = DateTime.now().minute;
+        if (minute % 5 == 0) {
+          newStatus = ServiceStatus.busy;
+          newAvailability = "Available in 15 mins";
+        } else if (minute % 3 == 0) {
+          newStatus = ServiceStatus.available;
           newAvailability = "High demand now";
+        } else {
+          newStatus = ServiceStatus.available;
+          newAvailability = "Available now";
         }
 
         return service.copyWith(
           price: double.parse(newPrice.toStringAsFixed(2)),
           availabilityInfo: newAvailability,
+          status: newStatus,
         );
       }).toList();
 
@@ -213,7 +231,9 @@ class ServicesBloc extends Bloc<ServicesEvent, ServicesState> {
     await Future.delayed(const Duration(seconds: 1));
     emit(
       ServicesLoaded(
-        services: _mockServices,
+        services: state is ServicesLoaded
+            ? (state as ServicesLoaded).services
+            : _mockServices,
         activeBookings: List.from(_activeBookings),
       ),
     );
@@ -238,6 +258,23 @@ class ServicesBloc extends Bloc<ServicesEvent, ServicesState> {
           ),
         );
       }
+    }
+  }
+
+  void _onDismissBooking(
+    DismissBooking event,
+    Emitter<ServicesState> emit,
+  ) async {
+    _activeBookings.removeWhere((b) => b.id == event.bookingId);
+    await storage.saveBookings(_activeBookings);
+
+    if (state is ServicesLoaded) {
+      emit(
+        ServicesLoaded(
+          services: (state as ServicesLoaded).services,
+          activeBookings: List.from(_activeBookings),
+        ),
+      );
     }
   }
 
