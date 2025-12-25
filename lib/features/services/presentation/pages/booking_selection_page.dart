@@ -98,35 +98,82 @@ class _BookingSelectionPageState extends State<BookingSelectionPage> {
                 color: Theme.of(context).primaryColor.withAlpha(30),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Icon(
-                    widget.service.icon,
-                    color: Theme.of(context).primaryColor,
-                    size: 32,
+                  Row(
+                    children: [
+                      Icon(
+                        widget.service.icon,
+                        color: Theme.of(context).primaryColor,
+                        size: 32,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.service.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              widget.service.description,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.service.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  if (widget.service.availabilityInfo != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: widget.service.status == ServiceStatus.available
+                            ? Colors.green.withAlpha(20)
+                            : Colors.orange.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            widget.service.status == ServiceStatus.available
+                                ? Icons.check_circle_outline
+                                : Icons.access_time,
+                            size: 14,
+                            color:
+                                widget.service.status == ServiceStatus.available
+                                ? Colors.green
+                                : Colors.orange,
                           ),
-                        ),
-                        Text(
-                          widget.service.description,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 13,
+                          const SizedBox(width: 6),
+                          Text(
+                            widget.service.availabilityInfo!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  widget.service.status ==
+                                      ServiceStatus.available
+                                  ? Colors.green
+                                  : Colors.orange,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -259,6 +306,27 @@ class _BookingSelectionPageState extends State<BookingSelectionPage> {
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
+                  if (widget.service.status == ServiceStatus.busy) {
+                    final now = DateTime.now();
+                    final selected = DateTime(
+                      _selectedDate.year,
+                      _selectedDate.month,
+                      _selectedDate.day,
+                      _selectedTime.hour,
+                      _selectedTime.minute,
+                    );
+                    if (selected.difference(now).inMinutes < 15) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Service is currently busy. Please select a time at least 15 minutes from now.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                  }
+
                   final combinedDateTime = DateTime(
                     _selectedDate.year,
                     _selectedDate.month,
