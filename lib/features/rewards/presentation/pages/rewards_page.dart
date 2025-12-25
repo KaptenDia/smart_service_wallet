@@ -37,6 +37,13 @@ class RewardsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   _Section(
+                    title: 'Special Promotions',
+                    offers: state.offers
+                        .where((o) => o.id.startsWith('r'))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  _Section(
                     title: 'Loyalty Rewards',
                     offers: state.offers
                         .where((o) => o.id.startsWith('l'))

@@ -4,6 +4,8 @@ import '../../data/models/offer_model.dart';
 import 'package:smart_service_wallet/core/services/local_storage_service.dart';
 import 'dart:async';
 
+import 'package:smart_service_wallet/features/wallet/presentation/bloc/wallet_bloc.dart';
+
 // Events
 abstract class RewardsEvent extends Equatable {
   const RewardsEvent();
@@ -16,6 +18,13 @@ class LoadRewards extends RewardsEvent {}
 class ClaimOffer extends RewardsEvent {
   final String offerId;
   const ClaimOffer(this.offerId);
+  @override
+  List<Object?> get props => [offerId];
+}
+
+class RedeemOffer extends RewardsEvent {
+  final String offerId;
+  const RedeemOffer(this.offerId);
   @override
   List<Object?> get props => [offerId];
 }
@@ -44,10 +53,13 @@ class RewardsLoaded extends RewardsState {
 // Bloc
 class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
   final LocalStorageService storage;
+  final WalletBloc walletBloc;
 
-  RewardsBloc({required this.storage}) : super(RewardsInitial()) {
+  RewardsBloc({required this.storage, required this.walletBloc})
+    : super(RewardsInitial()) {
     on<LoadRewards>(_onLoadRewards);
     on<ClaimOffer>(_onClaimOffer);
+    on<RedeemOffer>(_onRedeemOffer);
   }
 
   void _onLoadRewards(LoadRewards event, Emitter<RewardsState> emit) async {
@@ -75,6 +87,20 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
 
       if (offerIndex != -1) {
         final offer = current.offers[offerIndex];
+
+        // Determine if it's a campaign goal (grant GP) or reward (cost GP)
+        // Campaigns start with 'c', Rewards/Offers with 'r', 'e', 'l'
+        final isCampaign = offer.id.startsWith('c');
+
+        // Check if user has enough GP if it's a reward
+        if (!isCampaign && walletBloc.state is WalletLoaded) {
+          final balance = (walletBloc.state as WalletLoaded).balance;
+          if (balance.loyaltyTokens < offer.pointsRequired) {
+            // In a real app we might emit an error state
+            return;
+          }
+        }
+
         final updatedOffer = offer.copyWith(
           isClaimed: true,
           expiry: DateTime.now().add(const Duration(hours: 2)), // 2 hour timer
@@ -86,10 +112,37 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
         final updatedClaimed = [...current.claimedOffers, updatedOffer];
         await storage.saveClaimedOffers(updatedClaimed);
 
+        // Update Wallet Balance
+        walletBloc.add(
+          UpdateBalance(
+            tokensDelta: isCampaign
+                ? offer.pointsRequired
+                : -offer.pointsRequired,
+            description: isCampaign
+                ? "Campaign Reward: ${offer.title}"
+                : "Claimed Reward: ${offer.title}",
+          ),
+        );
+
         emit(
           RewardsLoaded(offers: updatedOffers, claimedOffers: updatedClaimed),
         );
       }
+    }
+  }
+
+  void _onRedeemOffer(RedeemOffer event, Emitter<RewardsState> emit) async {
+    if (state is RewardsLoaded) {
+      final current = state as RewardsLoaded;
+      final updatedClaimed = current.claimedOffers
+          .where((o) => o.id != event.offerId)
+          .toList();
+
+      await storage.saveClaimedOffers(updatedClaimed);
+
+      emit(
+        RewardsLoaded(offers: current.offers, claimedOffers: updatedClaimed),
+      );
     }
   }
 
@@ -100,7 +153,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       title: "Holiday Mega Goal",
       description: "Complete 10 bookings this month to win 500 GP.",
       imageUrl:
-          "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500&q=80",
+          "https://images.unsplash.com/photo-1766546718103-da6823613fb0?w=500&q=80",
       pointsRequired: 10,
     ),
     const OfferModel(
@@ -108,7 +161,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       title: "New User Welcome",
       description: "Claim your first RM10 voucher for any service.",
       imageUrl:
-          "https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=500&q=80",
+          "https://images.unsplash.com/photo-1579389083046-e3df9c2b3325?w=500&q=80",
       pointsRequired: 5,
     ),
     // Offers/Vouchers
@@ -117,7 +170,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       title: "Free Valet Upgrade",
       description: "Get a free upgrade to VIP valet parking.",
       imageUrl:
-          "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&q=80",
+          "https://images.unsplash.com/photo-1766425597345-629c0f803d4c?w=500&q=80",
       pointsRequired: 50,
     ),
     const OfferModel(
@@ -134,7 +187,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       title: "Grand Opening Gala",
       description: "Invitation to our new bay launch event.",
       imageUrl:
-          "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500&q=80",
+          "https://images.unsplash.com/photo-1766145605687-fde866d32ae1?w=500&q=80",
       pointsRequired: 20,
     ),
     // Loyalty
@@ -143,7 +196,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       title: "Gold Member Lounge",
       description: "Access to VIP waiting lounge for 1 hour.",
       imageUrl:
-          "https://images.unsplash.com/photo-1560624056-44c13861bd61?w=500&q=80",
+          "https://images.unsplash.com/photo-1766068472854-3184eda0d376?w=500&q=80",
       pointsRequired: 100,
     ),
   ];

@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_service_wallet/features/rewards/data/models/offer_model.dart';
+import 'package:smart_service_wallet/features/rewards/presentation/bloc/rewards_bloc.dart';
 
 class ClaimedRewardDetailPage extends StatefulWidget {
   final OfferModel offer;
@@ -124,6 +127,9 @@ class _ClaimedRewardDetailPageState extends State<ClaimedRewardDetailPage> {
                     height: 55,
                     child: ElevatedButton(
                       onPressed: () {
+                        context.read<RewardsBloc>().add(
+                          RedeemOffer(widget.offer.id),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Voucher applied successfully!'),
