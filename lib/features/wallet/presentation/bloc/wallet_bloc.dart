@@ -35,6 +35,21 @@ class TopUp extends WalletEvent {
   List<Object?> get props => [amount];
 }
 
+class UpdateBalance extends WalletEvent {
+  final double? creditsDelta;
+  final int? tokensDelta;
+  final String description;
+
+  const UpdateBalance({
+    this.creditsDelta,
+    this.tokensDelta,
+    required this.description,
+  });
+
+  @override
+  List<Object?> get props => [creditsDelta, tokensDelta, description];
+}
+
 // States
 abstract class WalletState extends Equatable {
   const WalletState();
@@ -71,6 +86,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     on<LoadWallet>(_onLoadWallet);
     on<DeductBalance>(_onDeductBalance);
     on<TopUp>(_onTopUp);
+    on<UpdateBalance>(_onUpdateBalance);
   }
 
   void _onLoadWallet(LoadWallet event, Emitter<WalletState> emit) async {
@@ -134,6 +150,41 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         currency: "RM",
         date: DateTime.now(),
         type: TransactionType.credit,
+      );
+
+      final newTransactions = [newTransaction, ...current.transactions];
+
+      await storage.saveWalletBalance(newBalance);
+      await storage.saveTransactions(newTransactions);
+
+      emit(WalletLoaded(balance: newBalance, transactions: newTransactions));
+    }
+  }
+
+  void _onUpdateBalance(UpdateBalance event, Emitter<WalletState> emit) async {
+    if (state is WalletLoaded) {
+      final current = (state as WalletLoaded);
+      final newBalance = current.balance.copyWith(
+        credits: event.creditsDelta != null
+            ? current.balance.credits + event.creditsDelta!
+            : null,
+        loyaltyTokens: event.tokensDelta != null
+            ? current.balance.loyaltyTokens + event.tokensDelta!
+            : null,
+      );
+
+      final isCredit =
+          (event.creditsDelta ?? 0) >= 0 && (event.tokensDelta ?? 0) >= 0;
+
+      final newTransaction = TransactionModel(
+        id: "update_${DateTime.now().millisecondsSinceEpoch}",
+        title: event.description,
+        description: event.description,
+        amount: (event.creditsDelta ?? event.tokensDelta?.toDouble() ?? 0)
+            .abs(),
+        currency: event.creditsDelta != null ? "RM" : "GP",
+        date: DateTime.now(),
+        type: isCredit ? TransactionType.credit : TransactionType.debit,
       );
 
       final newTransactions = [newTransaction, ...current.transactions];
