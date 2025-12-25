@@ -18,7 +18,7 @@ Future<void> init() async {
   // Features - Blocs
   sl.registerLazySingleton(() => WalletBloc(storage: sl()));
   sl.registerLazySingleton(() => ServicesBloc(walletBloc: sl(), storage: sl()));
-  sl.registerLazySingleton(() => RewardsBloc(storage: sl()));
+  sl.registerLazySingleton(() => RewardsBloc(storage: sl(), walletBloc: sl()));
 
   // Data sources
   // sl.registerLazySingleton(() => MockDataSource());
