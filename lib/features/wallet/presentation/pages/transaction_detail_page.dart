@@ -138,7 +138,7 @@ class TransactionDetailPage extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Back to History',
+                  'Back to previous screen',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
