@@ -101,7 +101,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       description: "Complete 10 bookings this month to win 500 GP.",
       imageUrl:
           "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500&q=80",
-      pointsRequired: 0,
+      pointsRequired: 10,
     ),
     const OfferModel(
       id: "c2",
@@ -109,7 +109,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       description: "Claim your first RM10 voucher for any service.",
       imageUrl:
           "https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=500&q=80",
-      pointsRequired: 0,
+      pointsRequired: 5,
     ),
     // Offers/Vouchers
     const OfferModel(
@@ -135,7 +135,7 @@ class RewardsBloc extends Bloc<RewardsEvent, RewardsState> {
       description: "Invitation to our new bay launch event.",
       imageUrl:
           "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500&q=80",
-      pointsRequired: 0,
+      pointsRequired: 20,
     ),
     // Loyalty
     const OfferModel(
