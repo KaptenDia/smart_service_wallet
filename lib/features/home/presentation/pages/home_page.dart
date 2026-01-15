@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:smart_service_wallet/features/home/presentation/widgets/active_booking_home_card.dart';
 import 'package:smart_service_wallet/features/home/presentation/widgets/activity_item.dart';
 import 'package:smart_service_wallet/features/home/presentation/widgets/balance_card.dart';
@@ -9,9 +8,6 @@ import 'package:smart_service_wallet/features/home/presentation/widgets/service_
 import 'package:smart_service_wallet/features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'package:smart_service_wallet/features/services/presentation/bloc/services_bloc.dart';
 import 'package:smart_service_wallet/features/services/presentation/pages/booking_selection_page.dart';
-
-import 'package:smart_service_wallet/features/wallet/data/models/transaction_model.dart';
-import 'package:smart_service_wallet/features/wallet/presentation/pages/transaction_detail_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
-import 'package:smart_service_wallet/features/services/data/models/service_model.dart';
 import 'package:smart_service_wallet/features/services/data/models/booking_model.dart';
 import 'package:smart_service_wallet/features/services/presentation/bloc/services_bloc.dart';
 import 'package:smart_service_wallet/features/services/presentation/widgets/active_booking_card.dart';
 import 'package:smart_service_wallet/features/services/presentation/widgets/service_card.dart';
-import 'booking_selection_page.dart';
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
